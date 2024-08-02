@@ -1,5 +1,46 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+const String kExamplePage1 = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Load file or HTML string example</title>
+</head>
+<body>
+
+<h1>Local demo page 1</h1>
+<p>
+ This is an example page used to demonstrate how to load a local file or HTML
+ string using the <a href="https://pub.dev/packages/webview_flutter">Flutter
+ webview</a> plugin.
+</p>
+
+</body>
+</html>
+''';
+
+const String kExamplePage2 = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Load file or HTML string example</title>
+</head>
+<body>
+
+<h1>Local demo page 2</h1>
+<p>
+ This is an example page used to demonstrate how to load a local file or HTML
+ string using the <a href="https://pub.dev/packages/webview_flutter">Flutter
+ webview</a> plugin.
+</p>
+
+</body>
+</html>
+''';
+
 enum _MenuOptions {
   navigationDelegate,
   userAgent,
@@ -10,6 +51,10 @@ enum _MenuOptions {
   addCookie,
   setCookie,
   removeCookie,
+
+  loadFlutterAsset,
+  loadLocalFile,
+  loadHtmlString,  
   
 }
 class Menu extends StatefulWidget {
@@ -61,7 +106,35 @@ req.send();''');
             await _onSetCookie(widget.controller);
           case _MenuOptions.removeCookie:
             await _onRemoveCookie(widget.controller);
+          case _MenuOptions.loadFlutterAsset:
+            print("Loading Flutter asset...");
+            if (!mounted) {
+              print("Widget is not mounted, returning...");
+              return;
+            }
+            print("Widget is mounted, proceeding to load Flutter asset...");
+            await _onLoadFlutterAssetExample(widget.controller, context);
+            print("Finished loading Flutter asset.");
 
+          case _MenuOptions.loadLocalFile:
+            print("Loading local file...");
+            if (!mounted) {
+              print("Widget is not mounted, returning...");
+              return;
+            }
+            print("Widget is mounted, proceeding to load local file...");
+            await _onLoadLocalFileExample(widget.controller, context);
+            print("Finished loading local file.");
+
+          case _MenuOptions.loadHtmlString:
+            print("Loading HTML string...");
+            if (!mounted) {
+              print("Widget is not mounted, returning...");
+              return;
+            }
+            print("Widget is mounted, proceeding to load HTML string...");
+            await _onLoadHtmlStringExample(widget.controller, context);
+            print("Finished loading HTML string.");
         }
       },
       itemBuilder: (context) => [
@@ -96,15 +169,25 @@ req.send();''');
         const PopupMenuItem<_MenuOptions>(
           value: _MenuOptions.removeCookie,
           child: Text('Remove cookie'),
-
-            
-
-
-
-
-        ),      ],
+        ),
+        const PopupMenuItem<_MenuOptions>(                
+          value: _MenuOptions.loadFlutterAsset,
+          child: Text('Load Flutter Asset'),
+        ),
+        const PopupMenuItem<_MenuOptions>(
+          value: _MenuOptions.loadHtmlString,
+          child: Text('Load HTML string'),
+        ),
+        const PopupMenuItem<_MenuOptions>(
+          value: _MenuOptions.loadLocalFile,
+          child: Text('Load local file'),
+        ),                                                        
+      ],
     );
   }
+
+
+  
   Future<void> _onListCookies(WebViewController controller) async {
     final String cookies = await controller
         .runJavaScriptReturningResult('document.cookie') as String;
@@ -165,5 +248,32 @@ req.send();''');
     );
   }
 
+  Future<void> _onLoadFlutterAssetExample(
+      WebViewController controller, BuildContext context) async {
+    await controller.loadFlutterAsset('assets/www/index.html');
+  }
+
+  Future<void> _onLoadLocalFileExample(
+      WebViewController controller, BuildContext context) async {
+    final String pathToIndex = await _prepareLocalFile();
+
+    await controller.loadFile(pathToIndex);
+  }
+
+  static Future<String> _prepareLocalFile() async {
+    final String tmpDir = (await getTemporaryDirectory()).path;
+    final File indexFile = File('$tmpDir/www/index.html');
+
+    await Directory('$tmpDir/www').create(recursive: true);
+    await indexFile.writeAsString(kExamplePage1);
+
+    return indexFile.path;
+  }
+
+  Future<void> _onLoadHtmlStringExample(
+      WebViewController controller, BuildContext context) async {
+    await controller.loadHtmlString(kExamplePage2);
+  }  
 
 }
+
