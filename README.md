@@ -1,6 +1,8 @@
 # webview_in_flutter
 
-A new Flutter project.
+Done following the google codelabs:
+https://codelabs.developers.google.com/codelabs/flutter-webview#0
+
 
 ## Getting Started
 
